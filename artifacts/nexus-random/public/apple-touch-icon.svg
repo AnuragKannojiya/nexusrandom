@@ -1,11 +1,7 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark rounded background -->
-  <rect width="180" height="180" rx="40" fill="#0a0e14"/>
-  <!-- Outer glow ring -->
-  <rect x="8" y="8" width="164" height="164" rx="34" stroke="url(#glowGrad)" stroke-width="2" fill="none" opacity="0.6"/>
-  <!-- Stylized N letter -->
+  <rect width="180" height="180" rx="0" fill="#0a0e14"/>
+  <rect x="8" y="8" width="164" height="164" rx="0" stroke="url(#glowGrad)" stroke-width="2" fill="none" opacity="0.6"/>
   <path d="M42 130 L42 50 L58 50 L110 108 L110 50 L126 50 L126 130 L110 130 L58 72 L58 130 Z" fill="url(#nGrad)"/>
-  <!-- Accent dot -->
   <circle cx="138" cy="48" r="8" fill="#0de9f4" opacity="0.9"/>
   <defs>
     <linearGradient id="nGrad" x1="42" y1="50" x2="126" y2="130" gradientUnits="userSpaceOnUse">

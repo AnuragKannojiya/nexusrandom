@@ -1,0 +1,18 @@
+{
+  "name": "NexusRandom – Random Video & Text Chat",
+  "short_name": "NexusRandom",
+  "description": "Talk to strangers instantly with anonymous random video and text chat. No account needed. Connect now.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e14",
+  "theme_color": "#0de9f4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
