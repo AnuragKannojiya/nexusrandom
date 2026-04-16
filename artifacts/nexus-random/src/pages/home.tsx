@@ -34,16 +34,16 @@ export default function Home() {
   const [strangerName, setStrangerName] = useState("Stranger");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [hasLocalStream, setHasLocalStream] = useState(false);
+  const [hasRemoteStream, setHasRemoteStream] = useState(false);
   const [disconnected, setDisconnected] = useState(false);
   const [autoNextCountdown, setAutoNextCountdown] = useState(0);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
 
   const webrtcRef = useRef<WebRTCManager>(new WebRTCManager());
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
@@ -60,22 +60,47 @@ export default function Home() {
     interestsRef.current = interests;
   }, [interests]);
 
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+  const setLocalVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    localVideoRef.current = el;
+    if (el) {
+      const stream = webrtcRef.current.getLocalStream();
+      if (stream) {
+        el.srcObject = stream;
+        el.play().catch(() => {});
+      }
     }
-  }, [localStream]);
+  }, []);
 
-  useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+  const setRemoteVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    remoteVideoRef.current = el;
+    if (el) {
+      const stream = webrtcRef.current.getRemoteStream();
+      if (stream) {
+        el.srcObject = stream;
+        el.play().catch(() => {});
+      }
     }
-  }, [remoteStream]);
+  }, []);
+
+  const attachLocalStream = useCallback((stream: MediaStream | null) => {
+    setHasLocalStream(!!stream);
+    if (localVideoRef.current && stream) {
+      localVideoRef.current.srcObject = stream;
+      localVideoRef.current.play().catch(() => {});
+    }
+  }, []);
+
+  const attachRemoteStream = useCallback((stream: MediaStream) => {
+    setHasRemoteStream(true);
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = stream;
+      remoteVideoRef.current.play().catch(() => {});
+    }
+  }, []);
 
   const startAutoNextCountdown = useCallback(() => {
     setAutoNextCountdown(AUTO_NEXT_DELAY);
     if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current);
-
     let remaining = AUTO_NEXT_DELAY;
     autoNextTimerRef.current = setInterval(() => {
       remaining--;
@@ -99,10 +124,11 @@ export default function Home() {
   const doSkip = useCallback(() => {
     cancelAutoNext();
     webrtcRef.current.closePeerConnection();
-    setRemoteStream(null);
+    setHasRemoteStream(false);
     setDisconnected(false);
     setChatState("searching");
     setMessages([]);
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     getSocket().emit("skip", { interests: interestsRef.current });
   }, []);
 
@@ -110,11 +136,13 @@ export default function Home() {
     cancelAutoNext();
     getSocket().emit("leaveQueue");
     webrtcRef.current.close();
-    setLocalStream(null);
-    setRemoteStream(null);
+    setHasLocalStream(false);
+    setHasRemoteStream(false);
     setDisconnected(false);
     setMessages([]);
     setSessionId(null);
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
     setChatState("landing");
   }, []);
 
@@ -130,15 +158,21 @@ export default function Home() {
       setChatState("chatting");
       setMessages([]);
       setDisconnected(false);
-      setRemoteStream(null);
+      setHasRemoteStream(false);
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
 
-      webrtcRef.current.closePeerConnection();
-      webrtcRef.current.onRemoteStream((stream) => setRemoteStream(stream));
+      const mgr = webrtcRef.current;
+      mgr.closePeerConnection();
 
-      const stream = await webrtcRef.current.acquireLocalStream();
-      setLocalStream(stream);
+      mgr.onRemoteStream((stream) => {
+        console.log("[UI] Remote stream received");
+        attachRemoteStream(stream);
+      });
 
-      webrtcRef.current.createPeerConnection(data.startWebRTC);
+      const stream = await mgr.acquireLocalStream();
+      attachLocalStream(stream);
+
+      await mgr.createPeerConnection(data.startWebRTC);
     });
 
     socket.on("chatMessage", (data: { text: string; from: "you" | "stranger" }) => {
@@ -161,18 +195,21 @@ export default function Home() {
     socket.on("strangerLeft", () => {
       setDisconnected(true);
       webrtcRef.current.closePeerConnection();
-      setRemoteStream(null);
+      setHasRemoteStream(false);
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
       startAutoNextCountdown();
     });
 
     socket.on("webrtcOffer", (data: { offer: RTCSessionDescriptionInit }) => {
-      webrtcRef.current?.handleOffer(data.offer);
+      console.log("[UI] Received offer");
+      webrtcRef.current.handleOffer(data.offer);
     });
     socket.on("webrtcAnswer", (data: { answer: RTCSessionDescriptionInit }) => {
-      webrtcRef.current?.handleAnswer(data.answer);
+      console.log("[UI] Received answer");
+      webrtcRef.current.handleAnswer(data.answer);
     });
     socket.on("webrtcIceCandidate", (data: { candidate: RTCIceCandidateInit }) => {
-      webrtcRef.current?.handleIceCandidate(data.candidate);
+      webrtcRef.current.handleIceCandidate(data.candidate);
     });
 
     return () => {
@@ -185,12 +222,12 @@ export default function Home() {
       socket.off("webrtcAnswer");
       socket.off("webrtcIceCandidate");
     };
-  }, [startAutoNextCountdown]);
+  }, [startAutoNextCountdown, attachLocalStream, attachRemoteStream]);
 
   const handleStartChat = async () => {
     setChatState("searching");
     webrtcRef.current.acquireLocalStream().then((stream) => {
-      if (stream) setLocalStream(stream);
+      attachLocalStream(stream);
     });
     getSocket().emit("joinQueue", { interests });
   };
@@ -201,9 +238,7 @@ export default function Home() {
     setInterests((prev) => [...prev, cleaned]);
   };
 
-  const removeTag = (tag: string) => {
-    setInterests((prev) => prev.filter((t) => t !== tag));
-  };
+  const removeTag = (tag: string) => setInterests((prev) => prev.filter((t) => t !== tag));
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
@@ -231,14 +266,16 @@ export default function Home() {
   };
 
   const toggleVideo = () => {
-    if (!localStream) return;
-    localStream.getVideoTracks().forEach((t) => (t.enabled = !videoEnabled));
+    const stream = webrtcRef.current.getLocalStream();
+    if (!stream) return;
+    stream.getVideoTracks().forEach((t) => (t.enabled = !videoEnabled));
     setVideoEnabled((v) => !v);
   };
 
   const toggleAudio = () => {
-    if (!localStream) return;
-    localStream.getAudioTracks().forEach((t) => (t.enabled = !audioEnabled));
+    const stream = webrtcRef.current.getLocalStream();
+    if (!stream) return;
+    stream.getAudioTracks().forEach((t) => (t.enabled = !audioEnabled));
     setAudioEnabled((a) => !a);
   };
 
@@ -340,22 +377,24 @@ export default function Home() {
                 <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <Tag className="w-4 h-4 text-primary" />
                   <span>Interest Keywords</span>
-                  <span className="text-muted-foreground font-normal">(optional — match with like-minded people)</span>
+                  <span className="text-muted-foreground font-normal">(optional)</span>
                 </div>
 
-                <div className="flex flex-wrap gap-2 min-h-[36px]">
-                  {interests.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1.5 bg-primary/20 border border-primary/40 text-primary text-sm px-3 py-1 rounded-full font-medium"
-                    >
-                      #{tag}
-                      <button onClick={() => removeTag(tag)} className="hover:text-white transition-colors">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
+                {interests.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {interests.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1.5 bg-primary/20 border border-primary/40 text-primary text-sm px-3 py-1 rounded-full font-medium"
+                      >
+                        #{tag}
+                        <button onClick={() => removeTag(tag)} className="hover:text-white transition-colors">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex gap-2">
                   <input
@@ -443,17 +482,22 @@ export default function Home() {
             >
               <div className="lg:col-span-8 flex flex-col gap-4">
                 <div className="flex-1 grid grid-cols-2 gap-4 min-h-[300px]">
-                  <div className="relative bg-black/50 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
-                    <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                    {!remoteStream && !disconnected && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+                  <div className="relative bg-black/80 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
+                    <video
+                      ref={setRemoteVideoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    {!hasRemoteStream && !disconnected && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
                         <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
                         <span className="text-muted-foreground font-medium">{strangerName}</span>
                         <span className="text-xs text-muted-foreground/70 mt-1">Connecting video...</span>
                       </div>
                     )}
                     {disconnected && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95">
                         <VideoOff className="w-10 h-10 text-muted-foreground mb-3" />
                         <span className="text-white font-semibold">Stranger left</span>
                         <span className="text-primary text-sm mt-2 font-mono">
@@ -462,13 +506,13 @@ export default function Home() {
                         <div className="flex gap-2 mt-4">
                           <button
                             onClick={doSkip}
-                            className="px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors"
+                            className="px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90"
                           >
                             Find Now
                           </button>
                           <button
                             onClick={() => { cancelAutoNext(); doStop(); }}
-                            className="px-4 py-2 bg-white/10 text-white text-sm rounded-lg hover:bg-white/20 transition-colors"
+                            className="px-4 py-2 bg-white/10 text-white text-sm rounded-lg hover:bg-white/20"
                           >
                             Stop
                           </button>
@@ -477,23 +521,29 @@ export default function Home() {
                     )}
                     {!disconnected && (
                       <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs font-medium text-white flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                        <div className={`w-1.5 h-1.5 rounded-full ${hasRemoteStream ? "bg-green-400 animate-pulse" : "bg-yellow-400"}`} />
                         {strangerName}
                       </div>
                     )}
                   </div>
 
-                  <div className="relative bg-black/50 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
-                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-                    {!localStream && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+                  <div className="relative bg-black/80 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
+                    <video
+                      ref={setLocalVideoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover scale-x-[-1]"
+                    />
+                    {!hasLocalStream && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
                         <VideoOff className="w-8 h-8 text-muted-foreground mb-2" />
                         <span className="text-muted-foreground font-medium">You</span>
                         <span className="text-xs text-muted-foreground/70 mt-1">Camera unavailable</span>
                       </div>
                     )}
-                    {localStream && !videoEnabled && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                    {hasLocalStream && !videoEnabled && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                         <VideoOff className="w-8 h-8 text-muted-foreground" />
                       </div>
                     )}
@@ -501,10 +551,11 @@ export default function Home() {
                       <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                       You
                     </div>
-                    {localStream && (
+                    {hasLocalStream && (
                       <div className="absolute bottom-3 right-3 flex gap-1.5">
                         <button
                           onClick={toggleVideo}
+                          title={videoEnabled ? "Disable camera" : "Enable camera"}
                           className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
                         >
                           {videoEnabled
@@ -513,6 +564,7 @@ export default function Home() {
                         </button>
                         <button
                           onClick={toggleAudio}
+                          title={audioEnabled ? "Mute mic" : "Unmute mic"}
                           className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
                         >
                           {audioEnabled
@@ -568,7 +620,7 @@ export default function Home() {
                     Connected to {strangerName}!
                     {interests.length > 0 && (
                       <span className="block mt-1 text-muted-foreground">
-                        Shared interests: {interests.map((t) => `#${t}`).join(" ")}
+                        Your interests: {interests.map((t) => `#${t}`).join(" ")}
                       </span>
                     )}
                   </div>
