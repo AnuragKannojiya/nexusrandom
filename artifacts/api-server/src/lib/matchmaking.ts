@@ -293,7 +293,7 @@ export function setupSocketIO(io: SocketIOServer): void {
       if (sessionId) endSession(io, sessionId, socket.id);
     });
 
-    socket.on("skip", () => {
+    socket.on("skip", (data?: { interests?: string[] }) => {
       if (isRateLimited(meta)) {
         socket.emit("skipRateLimited", { waitMs: 5000 });
         return;
@@ -301,6 +301,13 @@ export function setupSocketIO(io: SocketIOServer): void {
 
       meta.skipCount++;
       meta.lastSkipAt = Date.now();
+
+      if (data?.interests) {
+        meta.interests = (data.interests)
+          .filter((i: unknown) => typeof i === "string")
+          .slice(0, 10)
+          .map((i: string) => i.toLowerCase().trim());
+      }
 
       const sessionId = socketToSession.get(socket.id);
       if (sessionId) endSession(io, sessionId, socket.id);

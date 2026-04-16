@@ -31,42 +31,35 @@ export class WebRTCManager {
   private onRemoteStreamCallback: ((stream: MediaStream) => void) | null = null;
   private pendingCandidates: RTCIceCandidateInit[] = [];
   private hasRemoteDescription = false;
-  private isInitiator = false;
 
   constructor() {}
 
-  async initLocalStream(): Promise<MediaStream | null> {
+  async acquireLocalStream(): Promise<MediaStream | null> {
+    if (this.localStream) return this.localStream;
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 },
-          frameRate: { ideal: 30, max: 60 },
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
       return this.localStream;
-    } catch (_err) {
+    } catch {
       try {
-        this.localStream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        });
+        this.localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         return this.localStream;
-      } catch (_err2) {
+      } catch {
         try {
           this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           return this.localStream;
-        } catch (_err3) {
-          console.warn("No camera/mic available — text-only mode");
+        } catch {
+          console.warn("No camera/mic — text-only mode");
           return null;
         }
       }
     }
+  }
+
+  setLocalStream(stream: MediaStream | null) {
+    this.localStream = stream;
   }
 
   getLocalStream(): MediaStream | null {
@@ -82,7 +75,8 @@ export class WebRTCManager {
   }
 
   createPeerConnection(initiator: boolean) {
-    this.isInitiator = initiator;
+    this.closePeerConnection();
+
     const socket = getSocket();
 
     this.peerConnection = new RTCPeerConnection({
@@ -109,7 +103,7 @@ export class WebRTCManager {
       const stream = event.streams?.[0] ?? new MediaStream([event.track]);
       this.remoteStream = stream;
       if (this.onRemoteStreamCallback) {
-        this.onRemoteStreamCallback(this.remoteStream);
+        this.onRemoteStreamCallback(stream);
       }
     };
 
@@ -123,15 +117,12 @@ export class WebRTCManager {
 
     if (initiator) {
       this.peerConnection
-        .createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true,
-        })
+        .createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true })
         .then((offer) => this.peerConnection!.setLocalDescription(offer))
         .then(() => {
           socket.emit("webrtcOffer", { offer: this.peerConnection!.localDescription!.toJSON() });
         })
-        .catch((err) => console.error("Error creating offer", err));
+        .catch((err) => console.error("Error creating offer:", err));
     }
   }
 
@@ -141,12 +132,11 @@ export class WebRTCManager {
       await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
       this.hasRemoteDescription = true;
       await this.flushPendingCandidates();
-
       const answer = await this.peerConnection.createAnswer();
       await this.peerConnection.setLocalDescription(answer);
       getSocket().emit("webrtcAnswer", { answer: this.peerConnection.localDescription!.toJSON() });
     } catch (err) {
-      console.error("Error handling offer", err);
+      console.error("Error handling offer:", err);
     }
   }
 
@@ -157,7 +147,7 @@ export class WebRTCManager {
       this.hasRemoteDescription = true;
       await this.flushPendingCandidates();
     } catch (err) {
-      console.error("Error handling answer", err);
+      console.error("Error handling answer:", err);
     }
   }
 
@@ -169,9 +159,7 @@ export class WebRTCManager {
     }
     try {
       await this.peerConnection?.addIceCandidate(new RTCIceCandidate(candidate));
-    } catch (err) {
-      console.warn("Error adding ice candidate", err);
-    }
+    } catch (_) {}
   }
 
   private async flushPendingCandidates() {
@@ -184,17 +172,25 @@ export class WebRTCManager {
     }
   }
 
-  close() {
+  closePeerConnection() {
     this.hasRemoteDescription = false;
     this.pendingCandidates = [];
     if (this.peerConnection) {
       this.peerConnection.close();
       this.peerConnection = null;
     }
+    this.remoteStream = null;
+  }
+
+  stopLocalStream() {
     if (this.localStream) {
-      this.localStream.getTracks().forEach((track) => track.stop());
+      this.localStream.getTracks().forEach((t) => t.stop());
       this.localStream = null;
     }
-    this.remoteStream = null;
+  }
+
+  close() {
+    this.closePeerConnection();
+    this.stopLocalStream();
   }
 }

@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Users, AlertTriangle, MessageSquare, Video, VideoOff, StopCircle, SkipForward, Mic, MicOff } from "lucide-react";
+import {
+  Loader2, Users, AlertTriangle, MessageSquare, Video, VideoOff,
+  StopCircle, SkipForward, Mic, MicOff, Tag, X,
+} from "lucide-react";
 import { getSocket } from "@/lib/socket";
 import { WebRTCManager } from "@/lib/webrtc";
 import { useGetPlatformStats, useCheckBanStatus } from "@workspace/api-client-react";
@@ -17,35 +20,45 @@ interface Message {
   timestamp: number;
 }
 
+const POPULAR_TAGS = ["gaming", "music", "anime", "movies", "sports", "tech", "art", "travel", "food", "fitness"];
+const AUTO_NEXT_DELAY = 3;
+
 export default function Home() {
   const [chatState, setChatState] = useState<ChatState>("landing");
   const [onlineCount, setOnlineCount] = useState<number>(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
   const [strangerTyping, setStrangerTyping] = useState(false);
   const [strangerName, setStrangerName] = useState("Stranger");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  const [showDisconnectMessage, setShowDisconnectMessage] = useState(false);
+  const [disconnected, setDisconnected] = useState(false);
+  const [autoNextCountdown, setAutoNextCountdown] = useState(0);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [mediaReady, setMediaReady] = useState(false);
 
-  const webrtcRef = useRef<WebRTCManager | null>(null);
+  const webrtcRef = useRef<WebRTCManager>(new WebRTCManager());
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const prewarmedStreamRef = useRef<MediaStream | null>(null);
+  const autoNextTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const interestsRef = useRef<string[]>([]);
 
-  const { data: stats, isLoading: statsLoading } = useGetPlatformStats();
+  const { data: stats } = useGetPlatformStats();
   const { data: banStatus } = useCheckBanStatus();
 
   useEffect(() => {
     if (stats?.onlineUsers) setOnlineCount(stats.onlineUsers);
   }, [stats]);
+
+  useEffect(() => {
+    interestsRef.current = interests;
+  }, [interests]);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -59,39 +72,79 @@ export default function Home() {
     }
   }, [remoteStream]);
 
+  const startAutoNextCountdown = useCallback(() => {
+    setAutoNextCountdown(AUTO_NEXT_DELAY);
+    if (autoNextTimerRef.current) clearInterval(autoNextTimerRef.current);
+
+    let remaining = AUTO_NEXT_DELAY;
+    autoNextTimerRef.current = setInterval(() => {
+      remaining--;
+      setAutoNextCountdown(remaining);
+      if (remaining <= 0) {
+        clearInterval(autoNextTimerRef.current);
+        autoNextTimerRef.current = undefined;
+        doSkip();
+      }
+    }, 1000);
+  }, []);
+
+  const cancelAutoNext = () => {
+    if (autoNextTimerRef.current) {
+      clearInterval(autoNextTimerRef.current);
+      autoNextTimerRef.current = undefined;
+    }
+    setAutoNextCountdown(0);
+  };
+
+  const doSkip = useCallback(() => {
+    cancelAutoNext();
+    webrtcRef.current.closePeerConnection();
+    setRemoteStream(null);
+    setDisconnected(false);
+    setChatState("searching");
+    setMessages([]);
+    getSocket().emit("skip", { interests: interestsRef.current });
+  }, []);
+
+  const doStop = useCallback(() => {
+    cancelAutoNext();
+    getSocket().emit("leaveQueue");
+    webrtcRef.current.close();
+    setLocalStream(null);
+    setRemoteStream(null);
+    setDisconnected(false);
+    setMessages([]);
+    setSessionId(null);
+    setChatState("landing");
+  }, []);
+
   useEffect(() => {
     const socket = getSocket();
 
     socket.on("onlineCount", (count: number) => setOnlineCount(count));
 
     socket.on("matched", async (data: { sessionId: string; strangerName: string; startWebRTC: boolean }) => {
+      cancelAutoNext();
       setSessionId(data.sessionId);
       setStrangerName(data.strangerName);
       setChatState("chatting");
       setMessages([]);
-      setShowDisconnectMessage(false);
+      setDisconnected(false);
+      setRemoteStream(null);
 
-      if (!webrtcRef.current) {
-        webrtcRef.current = new WebRTCManager();
-        webrtcRef.current.onRemoteStream((stream) => setRemoteStream(stream));
-      }
+      webrtcRef.current.closePeerConnection();
+      webrtcRef.current.onRemoteStream((stream) => setRemoteStream(stream));
 
-      let stream: MediaStream | null = null;
-      if (prewarmedStreamRef.current) {
-        stream = prewarmedStreamRef.current;
-        prewarmedStreamRef.current = null;
-        (webrtcRef.current as any).localStream = stream;
-      } else {
-        stream = await webrtcRef.current.initLocalStream();
-      }
+      const stream = await webrtcRef.current.acquireLocalStream();
       setLocalStream(stream);
+
       webrtcRef.current.createPeerConnection(data.startWebRTC);
     });
 
     socket.on("chatMessage", (data: { text: string; from: "you" | "stranger" }) => {
       setMessages((prev) => [
         ...prev,
-        { id: Math.random().toString(), text: data.text, from: data.from, timestamp: Date.now() },
+        { id: `${Date.now()}-${Math.random()}`, text: data.text, from: data.from, timestamp: Date.now() },
       ]);
       setStrangerTyping(false);
       setTimeout(() => {
@@ -106,12 +159,10 @@ export default function Home() {
     });
 
     socket.on("strangerLeft", () => {
-      setShowDisconnectMessage(true);
-      if (webrtcRef.current) {
-        webrtcRef.current.close();
-        webrtcRef.current = null;
-      }
+      setDisconnected(true);
+      webrtcRef.current.closePeerConnection();
       setRemoteStream(null);
+      startAutoNextCountdown();
     });
 
     socket.on("webrtcOffer", (data: { offer: RTCSessionDescriptionInit }) => {
@@ -133,64 +184,41 @@ export default function Home() {
       socket.off("webrtcOffer");
       socket.off("webrtcAnswer");
       socket.off("webrtcIceCandidate");
-      if (webrtcRef.current) webrtcRef.current.close();
     };
-  }, []);
-
-  const prewarmMedia = useCallback(async () => {
-    if (prewarmedStreamRef.current || mediaReady) return;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      prewarmedStreamRef.current = stream;
-      setMediaReady(true);
-    } catch {
-      setMediaReady(true);
-    }
-  }, [mediaReady]);
+  }, [startAutoNextCountdown]);
 
   const handleStartChat = async () => {
     setChatState("searching");
-    prewarmMedia();
-    getSocket().emit("joinQueue");
+    webrtcRef.current.acquireLocalStream().then((stream) => {
+      if (stream) setLocalStream(stream);
+    });
+    getSocket().emit("joinQueue", { interests });
   };
 
-  const handleStop = () => {
-    getSocket().emit("leaveQueue");
-    setChatState("landing");
-    setSessionId(null);
-    setLocalStream(null);
-    setRemoteStream(null);
-    setMediaReady(false);
-    prewarmedStreamRef.current?.getTracks().forEach((t) => t.stop());
-    prewarmedStreamRef.current = null;
-    if (webrtcRef.current) {
-      webrtcRef.current.close();
-      webrtcRef.current = null;
-    }
+  const addTag = (tag: string) => {
+    const cleaned = tag.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+    if (!cleaned || interests.includes(cleaned) || interests.length >= 8) return;
+    setInterests((prev) => [...prev, cleaned]);
   };
 
-  const handleSkip = () => {
-    getSocket().emit("skip");
-    setChatState("searching");
-    setMessages([]);
-    setShowDisconnectMessage(false);
-    setRemoteStream(null);
-    if (webrtcRef.current) {
-      webrtcRef.current.close();
-      webrtcRef.current = null;
+  const removeTag = (tag: string) => {
+    setInterests((prev) => prev.filter((t) => t !== tag));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(tagInput);
+      setTagInput("");
+    } else if (e.key === "Backspace" && !tagInput && interests.length > 0) {
+      setInterests((prev) => prev.slice(0, -1));
     }
-    prewarmMedia();
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || showDisconnectMessage) return;
-    const socket = getSocket();
-    socket.emit("chatMessage", { text: inputValue.trim() });
-    setMessages((prev) => [
-      ...prev,
-      { id: Math.random().toString(), text: inputValue.trim(), from: "you", timestamp: Date.now() },
-    ]);
+    if (!inputValue.trim() || disconnected) return;
+    getSocket().emit("chatMessage", { text: inputValue.trim() });
     setInputValue("");
     setTimeout(() => {
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -204,16 +232,14 @@ export default function Home() {
 
   const toggleVideo = () => {
     if (!localStream) return;
-    const videoTracks = localStream.getVideoTracks();
-    videoTracks.forEach((t) => (t.enabled = !videoEnabled));
-    setVideoEnabled(!videoEnabled);
+    localStream.getVideoTracks().forEach((t) => (t.enabled = !videoEnabled));
+    setVideoEnabled((v) => !v);
   };
 
   const toggleAudio = () => {
     if (!localStream) return;
-    const audioTracks = localStream.getAudioTracks();
-    audioTracks.forEach((t) => (t.enabled = !audioEnabled));
-    setAudioEnabled(!audioEnabled);
+    localStream.getAudioTracks().forEach((t) => (t.enabled = !audioEnabled));
+    setAudioEnabled((a) => !a);
   };
 
   if (banStatus?.banned) {
@@ -231,7 +257,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             {banStatus.reason && (
-              <div className="bg-destructive/10 p-4 rounded-md border border-destructive/20 mt-4 text-destructive-foreground">
+              <div className="bg-destructive/10 p-4 rounded-md border border-destructive/20 mt-4">
                 <p className="font-semibold mb-1">Reason:</p>
                 <p>{banStatus.reason}</p>
               </div>
@@ -265,14 +291,13 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 px-3 py-1.5 rounded-full">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,255,255,1)]" />
-          <span className="text-sm font-medium text-primary">
-            {statsLoading ? "..." : onlineCount.toLocaleString()} online
-          </span>
+          <span className="text-sm font-medium text-primary">{onlineCount.toLocaleString()} online</span>
         </div>
       </header>
 
       <main className="flex-1 relative z-10 flex items-center justify-center p-4 lg:p-8">
         <AnimatePresence mode="wait">
+
           {chatState === "landing" && (
             <motion.div
               key="landing"
@@ -283,11 +308,13 @@ export default function Home() {
             >
               <div className="space-y-4">
                 <h2 className="text-5xl lg:text-7xl font-bold tracking-tighter text-white">
-                  Connect <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Instantly.</span>
+                  Connect{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                    Instantly.
+                  </span>
                 </h2>
                 <p className="text-lg lg:text-xl text-muted-foreground max-w-lg mx-auto">
-                  A raw, electric global chat platform where strangers connect instantly.
-                  Drop into a live chat with anyone in the world at any moment.
+                  A raw, electric global chat platform. Drop into a live video chat with anyone in the world.
                 </p>
               </div>
 
@@ -309,14 +336,71 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="pt-8">
+              <div className="w-full max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-5 text-left space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-white">
+                  <Tag className="w-4 h-4 text-primary" />
+                  <span>Interest Keywords</span>
+                  <span className="text-muted-foreground font-normal">(optional — match with like-minded people)</span>
+                </div>
+
+                <div className="flex flex-wrap gap-2 min-h-[36px]">
+                  {interests.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1.5 bg-primary/20 border border-primary/40 text-primary text-sm px-3 py-1 rounded-full font-medium"
+                    >
+                      #{tag}
+                      <button onClick={() => removeTag(tag)} className="hover:text-white transition-colors">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    placeholder="Type a keyword and press Enter..."
+                    maxLength={20}
+                    className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  />
+                  <button
+                    onClick={() => { addTag(tagInput); setTagInput(""); }}
+                    className="px-4 py-2.5 bg-primary/20 border border-primary/40 text-primary rounded-xl text-sm font-medium hover:bg-primary/30 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {POPULAR_TAGS.filter((t) => !interests.includes(t)).slice(0, 6).map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => addTag(tag)}
+                      className="text-xs text-muted-foreground border border-white/10 px-2.5 py-1 rounded-full hover:border-primary/50 hover:text-primary transition-all"
+                    >
+                      +{tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
                 <Button
                   size="lg"
                   onClick={handleStartChat}
-                  className="h-16 px-12 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all"
+                  className="h-16 px-12 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-full shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all"
                 >
                   START CHAT
                 </Button>
+                {interests.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Matching with people interested in: {interests.map((t) => `#${t}`).join(", ")}
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
@@ -338,8 +422,13 @@ export default function Home() {
               <div className="text-center space-y-2">
                 <h3 className="text-2xl font-bold text-white tracking-tight">Finding a Stranger</h3>
                 <p className="text-primary animate-pulse font-mono">Scanning global network...</p>
+                {interests.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Looking for: {interests.map((t) => `#${t}`).join(" ")}
+                  </p>
+                )}
               </div>
-              <Button variant="outline" onClick={handleStop} className="mt-8 border-white/20 hover:bg-white/10 text-white rounded-full px-8">
+              <Button variant="outline" onClick={doStop} className="mt-8 border-white/20 hover:bg-white/10 text-white rounded-full px-8">
                 CANCEL
               </Button>
             </motion.div>
@@ -356,21 +445,46 @@ export default function Home() {
                 <div className="flex-1 grid grid-cols-2 gap-4 min-h-[300px]">
                   <div className="relative bg-black/50 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
                     <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                    {!remoteStream && (
+                    {!remoteStream && !disconnected && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
                         <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
                         <span className="text-muted-foreground font-medium">{strangerName}</span>
                         <span className="text-xs text-muted-foreground/70 mt-1">Connecting video...</span>
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs font-medium text-white flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                      {strangerName}
-                    </div>
+                    {disconnected && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
+                        <VideoOff className="w-10 h-10 text-muted-foreground mb-3" />
+                        <span className="text-white font-semibold">Stranger left</span>
+                        <span className="text-primary text-sm mt-2 font-mono">
+                          Finding next in {autoNextCountdown}s...
+                        </span>
+                        <div className="flex gap-2 mt-4">
+                          <button
+                            onClick={doSkip}
+                            className="px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors"
+                          >
+                            Find Now
+                          </button>
+                          <button
+                            onClick={() => { cancelAutoNext(); doStop(); }}
+                            className="px-4 py-2 bg-white/10 text-white text-sm rounded-lg hover:bg-white/20 transition-colors"
+                          >
+                            Stop
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {!disconnected && (
+                      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs font-medium text-white flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                        {strangerName}
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative bg-black/50 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
-                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover transform scale-x-[-1]" />
+                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
                     {!localStream && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
                         <VideoOff className="w-8 h-8 text-muted-foreground mb-2" />
@@ -391,15 +505,19 @@ export default function Home() {
                       <div className="absolute bottom-3 right-3 flex gap-1.5">
                         <button
                           onClick={toggleVideo}
-                          className="w-7 h-7 rounded-full bg-black/60 border border-white/10 flex items-center justify-center hover:bg-black/80 transition-colors"
+                          className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
                         >
-                          {videoEnabled ? <Video className="w-3.5 h-3.5 text-white" /> : <VideoOff className="w-3.5 h-3.5 text-destructive" />}
+                          {videoEnabled
+                            ? <Video className="w-3.5 h-3.5 text-white" />
+                            : <VideoOff className="w-3.5 h-3.5 text-destructive" />}
                         </button>
                         <button
                           onClick={toggleAudio}
-                          className="w-7 h-7 rounded-full bg-black/60 border border-white/10 flex items-center justify-center hover:bg-black/80 transition-colors"
+                          className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
                         >
-                          {audioEnabled ? <Mic className="w-3.5 h-3.5 text-white" /> : <MicOff className="w-3.5 h-3.5 text-destructive" />}
+                          {audioEnabled
+                            ? <Mic className="w-3.5 h-3.5 text-white" />
+                            : <MicOff className="w-3.5 h-3.5 text-destructive" />}
                         </button>
                       </div>
                     )}
@@ -411,23 +529,22 @@ export default function Home() {
                     <Button
                       variant="destructive"
                       size="lg"
-                      onClick={handleStop}
+                      onClick={doStop}
                       className="font-bold rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                     >
                       <StopCircle className="mr-2 w-5 h-5" />
                       STOP
                     </Button>
                     <Button
-                      variant="default"
                       size="lg"
-                      onClick={handleSkip}
+                      onClick={doSkip}
                       className="bg-white hover:bg-gray-200 text-black font-bold rounded-xl"
                     >
                       <SkipForward className="mr-2 w-5 h-5" />
                       NEXT
                     </Button>
                   </div>
-                  {sessionId && (
+                  {sessionId && !disconnected && (
                     <Button
                       variant="ghost"
                       onClick={() => setIsReportOpen(true)}
@@ -442,13 +559,18 @@ export default function Home() {
 
               <div className="lg:col-span-4 flex flex-col bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden h-full">
                 <div className="p-4 border-b border-white/10 bg-black/20 font-medium text-white flex justify-between items-center">
-                  <span>Chat Session</span>
+                  <span>Chat</span>
                   <span className="text-xs text-muted-foreground font-mono">{strangerName}</span>
                 </div>
 
                 <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                   <div className="text-center py-3 text-xs font-mono text-primary bg-primary/5 rounded-lg border border-primary/20">
-                    Connected! Say hi to {strangerName}
+                    Connected to {strangerName}!
+                    {interests.length > 0 && (
+                      <span className="block mt-1 text-muted-foreground">
+                        Shared interests: {interests.map((t) => `#${t}`).join(" ")}
+                      </span>
+                    )}
                   </div>
 
                   {messages.map((msg) => (
@@ -459,7 +581,7 @@ export default function Home() {
                       <div
                         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
                           msg.from === "you"
-                            ? "bg-primary text-primary-foreground rounded-tr-sm shadow-[0_0_15px_rgba(0,255,255,0.2)]"
+                            ? "bg-primary text-black rounded-tr-sm shadow-[0_0_15px_rgba(0,255,255,0.2)]"
                             : "bg-white/10 text-white border border-white/5 rounded-tl-sm"
                         }`}
                       >
@@ -468,9 +590,9 @@ export default function Home() {
                     </div>
                   ))}
 
-                  {strangerTyping && (
+                  {strangerTyping && !disconnected && (
                     <div className="flex items-start">
-                      <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm px-4 py-3 text-sm flex items-center gap-1.5">
+                      <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" />
                         <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.2s" }} />
                         <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.4s" }} />
@@ -478,14 +600,17 @@ export default function Home() {
                     </div>
                   )}
 
-                  {showDisconnectMessage && (
-                    <div className="text-center py-6 mt-4">
-                      <div className="inline-block px-4 py-2 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm font-medium mb-4">
+                  {disconnected && (
+                    <div className="text-center py-4 space-y-3">
+                      <div className="inline-block px-4 py-2 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm font-medium">
                         Stranger has disconnected
                       </div>
-                      <div>
-                        <Button onClick={handleSkip} className="w-full bg-primary hover:bg-primary/90 text-black font-bold">
-                          Find Next Stranger
+                      <div className="flex gap-2 justify-center">
+                        <Button size="sm" onClick={doSkip} className="bg-primary hover:bg-primary/90 text-black font-bold">
+                          Find Next ({autoNextCountdown}s)
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => { cancelAutoNext(); doStop(); }} className="border-white/20 text-white hover:bg-white/10">
+                          Stop
                         </Button>
                       </div>
                     </div>
@@ -498,14 +623,14 @@ export default function Home() {
                       type="text"
                       value={inputValue}
                       onChange={handleTyping}
-                      placeholder={showDisconnectMessage ? "Chat ended..." : "Type a message..."}
-                      disabled={showDisconnectMessage}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-50"
+                      placeholder={disconnected ? "Chat ended..." : "Type a message..."}
+                      disabled={disconnected}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-50 text-sm"
                     />
                     <Button
                       type="submit"
-                      disabled={!inputValue.trim() || showDisconnectMessage}
-                      className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_15px_rgba(0,255,255,0.3)] font-bold disabled:opacity-50 disabled:shadow-none"
+                      disabled={!inputValue.trim() || disconnected}
+                      className="rounded-xl px-5 bg-primary hover:bg-primary/90 text-black font-bold disabled:opacity-50 shadow-[0_0_15px_rgba(0,255,255,0.3)]"
                     >
                       SEND
                     </Button>
