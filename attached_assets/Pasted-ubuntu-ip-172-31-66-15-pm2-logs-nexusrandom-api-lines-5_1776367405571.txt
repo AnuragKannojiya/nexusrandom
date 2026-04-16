@@ -1,0 +1,107 @@
+ubuntu@ip-172-31-66-15:~$ pm2 logs nexusrandom-api --lines 50 --nostream
+[TAILING] Tailing last 50 lines for [nexusrandom-api] process (change the value with --lines option)
+/home/ubuntu/.pm2/logs/nexusrandom-api-error.log last 50 lines:
+0|nexusran | 
+0|nexusran | Node.js v20.20.2
+0|nexusran | /home/ubuntu/nexusrandom/lib/db/src/index.ts:8
+0|nexusran |   throw new Error(
+0|nexusran |         ^
+0|nexusran | 
+0|nexusran | 
+0|nexusran | Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|nexusran |     at <anonymous> (/home/ubuntu/nexusrandom/lib/db/src/index.ts:8:9)
+0|nexusran |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+0|nexusran |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+0|nexusran |     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+0|nexusran | 
+0|nexusran | Node.js v20.20.2
+0|nexusran | /home/ubuntu/nexusrandom/lib/db/src/index.ts:8
+0|nexusran |   throw new Error(
+0|nexusran |         ^
+0|nexusran | 
+0|nexusran | 
+0|nexusran | Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|nexusran |     at <anonymous> (/home/ubuntu/nexusrandom/lib/db/src/index.ts:8:9)
+0|nexusran |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+0|nexusran |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+0|nexusran |     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+0|nexusran | 
+0|nexusran | Node.js v20.20.2
+0|nexusran | /home/ubuntu/nexusrandom/lib/db/src/index.ts:8
+0|nexusran |   throw new Error(
+0|nexusran |         ^
+0|nexusran | 
+0|nexusran | 
+0|nexusran | Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|nexusran |     at <anonymous> (/home/ubuntu/nexusrandom/lib/db/src/index.ts:8:9)
+0|nexusran |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+0|nexusran |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+0|nexusran |     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+0|nexusran | 
+0|nexusran | Node.js v20.20.2
+0|nexusran | /home/ubuntu/nexusrandom/lib/db/src/index.ts:8
+0|nexusran |   throw new Error(
+0|nexusran |         ^
+0|nexusran | 
+0|nexusran | 
+0|nexusran | Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|nexusran |     at <anonymous> (/home/ubuntu/nexusrandom/lib/db/src/index.ts:8:9)
+0|nexusran |     at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+0|nexusran |     at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+0|nexusran |     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+0|nexusran | 
+0|nexusran | Node.js v20.20.2
+
+/home/ubuntu/.pm2/logs/nexusrandom-api-out.log last 50 lines:
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+0|nexusran | 
+0|nexusran | > @workspace/api-server@0.0.0 start /home/ubuntu/nexusrandom/artifacts/api-server
+0|nexusran | > node --enable-source-maps ./dist/index.mjs
+0|nexusran | 
+0|nexusran | /home/ubuntu/nexusrandom/artifacts/api-server:
+0|nexusran |  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/api-server@0.0.0 start: `node --enable-source-maps ./dist/index.mjs`
+0|nexusran | Exit status 1
+
+ubuntu@ip-172-31-66-15:~$ 
