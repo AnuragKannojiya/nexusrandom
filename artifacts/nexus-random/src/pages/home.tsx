@@ -481,8 +481,9 @@ export default function Home() {
               className="w-full max-w-6xl h-[calc(100vh-120px)] grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6"
             >
               <div className="lg:col-span-8 flex flex-col gap-4">
-                <div className="flex-1 grid grid-cols-2 gap-4 min-h-[300px]">
-                  <div className="relative bg-black/80 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
+                <div className="flex-1 relative min-h-[300px]">
+                  {/* Stranger video — full size main screen */}
+                  <div className="w-full h-full relative bg-black/80 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
                     <video
                       ref={setRemoteVideoRef}
                       autoPlay
@@ -525,9 +526,32 @@ export default function Home() {
                         {strangerName}
                       </div>
                     )}
+
+                    {/* Camera & mic controls — bottom centre of main screen */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      <button
+                        onClick={toggleVideo}
+                        title={videoEnabled ? "Disable camera" : "Enable camera"}
+                        className="w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
+                      >
+                        {videoEnabled
+                          ? <Video className="w-4 h-4 text-white" />
+                          : <VideoOff className="w-4 h-4 text-destructive" />}
+                      </button>
+                      <button
+                        onClick={toggleAudio}
+                        title={audioEnabled ? "Mute mic" : "Unmute mic"}
+                        className="w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
+                      >
+                        {audioEnabled
+                          ? <Mic className="w-4 h-4 text-white" />
+                          : <MicOff className="w-4 h-4 text-destructive" />}
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="relative bg-black/80 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
+                  {/* Your video — floating PiP in bottom-right corner */}
+                  <div className="absolute bottom-4 right-4 w-32 h-24 sm:w-44 sm:h-32 rounded-xl overflow-hidden border-2 border-primary/40 shadow-2xl z-10 bg-black/80">
                     <video
                       ref={setLocalVideoRef}
                       autoPlay
@@ -537,42 +561,19 @@ export default function Home() {
                     />
                     {!hasLocalStream && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
-                        <VideoOff className="w-8 h-8 text-muted-foreground mb-2" />
-                        <span className="text-muted-foreground font-medium">You</span>
-                        <span className="text-xs text-muted-foreground/70 mt-1">Camera unavailable</span>
+                        <VideoOff className="w-5 h-5 text-muted-foreground mb-1" />
+                        <span className="text-muted-foreground text-xs">You</span>
                       </div>
                     )}
                     {hasLocalStream && !videoEnabled && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                        <VideoOff className="w-8 h-8 text-muted-foreground" />
+                        <VideoOff className="w-5 h-5 text-muted-foreground" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs font-medium text-white flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-medium text-white flex items-center gap-1">
+                      <div className="w-1 h-1 rounded-full bg-primary" />
                       You
                     </div>
-                    {hasLocalStream && (
-                      <div className="absolute bottom-3 right-3 flex gap-1.5">
-                        <button
-                          onClick={toggleVideo}
-                          title={videoEnabled ? "Disable camera" : "Enable camera"}
-                          className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
-                        >
-                          {videoEnabled
-                            ? <Video className="w-3.5 h-3.5 text-white" />
-                            : <VideoOff className="w-3.5 h-3.5 text-destructive" />}
-                        </button>
-                        <button
-                          onClick={toggleAudio}
-                          title={audioEnabled ? "Mute mic" : "Unmute mic"}
-                          className="w-8 h-8 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
-                        >
-                          {audioEnabled
-                            ? <Mic className="w-3.5 h-3.5 text-white" />
-                            : <MicOff className="w-3.5 h-3.5 text-destructive" />}
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
 
