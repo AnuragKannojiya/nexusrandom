@@ -1,0 +1,99 @@
+Step 3 — Connect to EC2 and Install Everything
+SSH into your server (replace with your file and IP):
+
+ssh -i ~/your-key.pem ubuntu@YOUR_ELASTIC_IP
+
+Run these commands on the server:
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+# Install pnpm
+npm install -g pnpm
+# Install PM2 (keeps the server running after restart)
+npm install -g pm2
+# Install NGINX (reverse proxy)
+sudo apt install -y nginx
+
+Step 4 — Upload Your Code
+On your local machine, push to GitHub first (using the steps from earlier), then on the server:
+
+git clone https://github.com/AnuragKannojiya/nexusrandom.git
+cd nexusrandom
+pnpm install
+pnpm --filter @workspace/api-server run build
+
+Step 5 — Set Environment Variables
+sudo nano /etc/environment
+
+Add these lines (fill in your values):
+
+NODE_ENV=production
+PORT=8080
+ALLOWED_ORIGIN=https://your-site.netlify.app
+ADMIN_SECRET=your-strong-password
+SESSION_SECRET=paste-your-32-char-random-string
+DATABASE_URL=postgresql://nexus:yourpassword@nexusrandom-db.xxxxx.us-east-1.rds.amazonaws.com:5432/postgres
+
+Save and apply:
+
+source /etc/environment
+
+Step 6 — Start the Server with PM2
+cd ~/nexusrandom
+pm2 start "pnpm --filter @workspace/api-server run start" --name nexusrandom-api
+pm2 save
+pm2 startup   # follow the command it prints to auto-start on reboot
+
+Step 7 — Set Up NGINX Reverse Proxy
+sudo nano /etc/nginx/sites-available/nexusrandom
+
+Paste this (replace YOUR_ELASTIC_IP with your IP):
+
+server {
+    listen 80;
+    server_name YOUR_ELASTIC_IP;
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+Enable it:
+
+sudo ln -s /etc/nginx/sites-available/nexusrandom /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+
+Step 8 — Connect Frontend to AWS Backend
+In Netlify → Environment Variables, update:
+
+VITE_API_URL = http://YOUR_ELASTIC_IP
+
+And update ALLOWED_ORIGIN on the EC2 server to your Netlify URL, then restart:
+
+pm2 restart nexusrandom-api
+
+Step 9 — (Optional but Recommended) Add a Domain + HTTPS
+Buy a domain (or use Route 53 to register one)
+Point your domain's A record to your Elastic IP
+Run Certbot for free SSL:
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
+
+HTTPS is done — Certbot auto-renews every 90 days.
+
+Cost Estimate
+Service	Monthly cost
+EC2 t3.micro (first 12 months)	Free
+RDS db.t3.micro (first 12 months)	Free
+Elastic IP (while attached)	Free
+After free tier expires	~$15–25/month
+Your AWS backend URL will be http://YOUR_ELASTIC_IP (or https://yourdomain.com if you add a domain). Use that as VITE_API_URL in Netlify.
