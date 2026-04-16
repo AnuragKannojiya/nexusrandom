@@ -4,6 +4,7 @@ import { reportsTable } from "@workspace/db";
 import { CreateReportBody } from "@workspace/api-zod";
 import { desc } from "drizzle-orm";
 import { createHash } from "crypto";
+import { requireAdmin } from "../lib/admin-auth";
 
 const router = Router();
 
@@ -35,8 +36,8 @@ router.post("/reports", async (req, res): Promise<void> => {
   res.status(201).json(report);
 });
 
-router.get("/reports", async (req, res): Promise<void> => {
-  const reports = await db.select().from(reportsTable).orderBy(desc(reportsTable.createdAt)).limit(100);
+router.get("/reports", requireAdmin, async (_req, res): Promise<void> => {
+  const reports = await db.select().from(reportsTable).orderBy(desc(reportsTable.createdAt)).limit(200);
   res.json(reports);
 });
 

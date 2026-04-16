@@ -4,6 +4,7 @@ import { bansTable } from "@workspace/db";
 import { CreateBanBody } from "@workspace/api-zod";
 import { desc, eq, and, or, isNull, gt } from "drizzle-orm";
 import { createHash } from "crypto";
+import { requireAdmin } from "../lib/admin-auth";
 
 const router = Router();
 
@@ -11,12 +12,12 @@ function hashIp(ip: string): string {
   return createHash("sha256").update(ip + "nexusrandom_salt_2024").digest("hex");
 }
 
-router.get("/bans", async (_req, res): Promise<void> => {
-  const bans = await db.select().from(bansTable).orderBy(desc(bansTable.createdAt)).limit(100);
+router.get("/bans", requireAdmin, async (_req, res): Promise<void> => {
+  const bans = await db.select().from(bansTable).orderBy(desc(bansTable.createdAt)).limit(200);
   res.json(bans);
 });
 
-router.post("/bans", async (req, res): Promise<void> => {
+router.post("/bans", requireAdmin, async (req, res): Promise<void> => {
   const body = CreateBanBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
@@ -34,6 +35,23 @@ router.post("/bans", async (req, res): Promise<void> => {
 
   req.log.info({ banId: ban.id }, "Ban created");
   res.status(201).json(ban);
+});
+
+router.delete("/bans/:id", requireAdmin, async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ban ID" });
+    return;
+  }
+
+  const [deleted] = await db.delete(bansTable).where(eq(bansTable.id, id)).returning();
+  if (!deleted) {
+    res.status(404).json({ error: "Ban not found" });
+    return;
+  }
+
+  req.log.info({ banId: id }, "Ban removed");
+  res.json({ success: true });
 });
 
 router.get("/bans/check", async (req, res): Promise<void> => {
