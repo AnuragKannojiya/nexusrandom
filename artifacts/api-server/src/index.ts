@@ -20,11 +20,16 @@ if (Number.isNaN(port) || port <= 0) {
 
 const httpServer = createServer(app);
 
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
+
 const io = new SocketIOServer(httpServer, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  cors: allowedOrigin
+    ? {
+        origin: allowedOrigin,
+        methods: ["GET", "POST"],
+        credentials: true,
+      }
+    : { origin: "*", methods: ["GET", "POST"] },
   transports: ["websocket", "polling"],
 });
 

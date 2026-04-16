@@ -28,7 +28,20 @@ app.use(
 );
 
 app.set("trust proxy", 1);
-app.use(cors());
+
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
+app.use(
+  cors(
+    allowedOrigin
+      ? {
+          origin: allowedOrigin,
+          methods: ["GET", "POST", "DELETE", "OPTIONS"],
+          credentials: true,
+        }
+      : undefined,
+  ),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,0 +1,13 @@
+[build]
+  base    = "."
+  command = "pnpm install && pnpm --filter @workspace/nexus-random run build"
+  publish = "artifacts/nexus-random/dist/public"
+
+[build.environment]
+  BASE_PATH   = "/"
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
