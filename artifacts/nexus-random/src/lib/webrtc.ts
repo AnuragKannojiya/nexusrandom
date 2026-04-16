@@ -1,23 +1,71 @@
 import { getSocket } from "./socket";
 
+const ICE_SERVERS: RTCIceServer[] = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" },
+  { urls: "stun:stun3.l.google.com:19302" },
+  { urls: "stun:stun4.l.google.com:19302" },
+  { urls: "stun:openrelay.metered.ca:80" },
+  {
+    urls: "turn:openrelay.metered.ca:80",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+  {
+    urls: "turn:openrelay.metered.ca:443?transport=tcp",
+    username: "openrelayproject",
+    credential: "openrelayproject",
+  },
+];
+
 export class WebRTCManager {
   private peerConnection: RTCPeerConnection | null = null;
   private localStream: MediaStream | null = null;
   private remoteStream: MediaStream | null = null;
   private onRemoteStreamCallback: ((stream: MediaStream) => void) | null = null;
+  private pendingCandidates: RTCIceCandidateInit[] = [];
+  private hasRemoteDescription = false;
+  private isInitiator = false;
 
   constructor() {}
 
   async initLocalStream(): Promise<MediaStream | null> {
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
+        video: {
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 60 },
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
       return this.localStream;
-    } catch (err) {
-      console.error("Failed to get local stream", err);
-      return null;
+    } catch (_err) {
+      try {
+        this.localStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        return this.localStream;
+      } catch (_err2) {
+        try {
+          this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          return this.localStream;
+        } catch (_err3) {
+          console.warn("No camera/mic available — text-only mode");
+          return null;
+        }
+      }
     }
   }
 
@@ -33,28 +81,35 @@ export class WebRTCManager {
     this.onRemoteStreamCallback = callback;
   }
 
-  createPeerConnection(isInitiator: boolean) {
+  createPeerConnection(initiator: boolean) {
+    this.isInitiator = initiator;
     const socket = getSocket();
 
     this.peerConnection = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-      ],
+      iceServers: ICE_SERVERS,
+      iceCandidatePoolSize: 10,
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
     });
 
     this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit("webrtcIceCandidate", event.candidate);
+        socket.emit("webrtcIceCandidate", { candidate: event.candidate.toJSON() });
+      }
+    };
+
+    this.peerConnection.oniceconnectionstatechange = () => {
+      const state = this.peerConnection?.iceConnectionState;
+      if (state === "failed") {
+        this.peerConnection?.restartIce();
       }
     };
 
     this.peerConnection.ontrack = (event) => {
-      if (event.streams && event.streams[0]) {
-        this.remoteStream = event.streams[0];
-        if (this.onRemoteStreamCallback) {
-          this.onRemoteStreamCallback(this.remoteStream);
-        }
+      const stream = event.streams?.[0] ?? new MediaStream([event.track]);
+      this.remoteStream = stream;
+      if (this.onRemoteStreamCallback) {
+        this.onRemoteStreamCallback(this.remoteStream);
       }
     };
 
@@ -66,48 +121,72 @@ export class WebRTCManager {
       });
     }
 
-    if (isInitiator) {
+    if (initiator) {
       this.peerConnection
-        .createOffer()
+        .createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        })
         .then((offer) => this.peerConnection!.setLocalDescription(offer))
         .then(() => {
-          socket.emit("webrtcOffer", this.peerConnection!.localDescription);
+          socket.emit("webrtcOffer", { offer: this.peerConnection!.localDescription!.toJSON() });
         })
         .catch((err) => console.error("Error creating offer", err));
     }
   }
 
   async handleOffer(offer: RTCSessionDescriptionInit) {
-    if (!this.peerConnection) return;
+    if (!this.peerConnection || !offer?.type) return;
     try {
       await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+      this.hasRemoteDescription = true;
+      await this.flushPendingCandidates();
+
       const answer = await this.peerConnection.createAnswer();
       await this.peerConnection.setLocalDescription(answer);
-      getSocket().emit("webrtcAnswer", this.peerConnection.localDescription);
+      getSocket().emit("webrtcAnswer", { answer: this.peerConnection.localDescription!.toJSON() });
     } catch (err) {
       console.error("Error handling offer", err);
     }
   }
 
   async handleAnswer(answer: RTCSessionDescriptionInit) {
-    if (!this.peerConnection) return;
+    if (!this.peerConnection || !answer?.type) return;
     try {
       await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+      this.hasRemoteDescription = true;
+      await this.flushPendingCandidates();
     } catch (err) {
       console.error("Error handling answer", err);
     }
   }
 
   async handleIceCandidate(candidate: RTCIceCandidateInit) {
-    if (!this.peerConnection) return;
+    if (!candidate) return;
+    if (!this.hasRemoteDescription) {
+      this.pendingCandidates.push(candidate);
+      return;
+    }
     try {
-      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      await this.peerConnection?.addIceCandidate(new RTCIceCandidate(candidate));
     } catch (err) {
-      console.error("Error adding ice candidate", err);
+      console.warn("Error adding ice candidate", err);
+    }
+  }
+
+  private async flushPendingCandidates() {
+    const toFlush = [...this.pendingCandidates];
+    this.pendingCandidates = [];
+    for (const c of toFlush) {
+      try {
+        await this.peerConnection?.addIceCandidate(new RTCIceCandidate(c));
+      } catch (_) {}
     }
   }
 
   close() {
+    this.hasRemoteDescription = false;
+    this.pendingCandidates = [];
     if (this.peerConnection) {
       this.peerConnection.close();
       this.peerConnection = null;

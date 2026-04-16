@@ -1,0 +1,168 @@
+You are a senior backend engineer and system design expert.
+
+Design and implement a highly efficient, scalable, and intelligent matchmaking algorithm for a real-time random chat platform similar to Omegle.
+
+---
+
+## 🎯 Objective
+
+Build a matchmaking system that pairs users instantly (<2 seconds) while optimizing for:
+
+* Low latency
+* User relevance (interests, region, preferences)
+* Fairness (no user waits too long)
+* Safety (avoid abusive/reported users)
+
+---
+
+## ⚙️ Core Requirements
+
+### 1. Hybrid Matchmaking Algorithm
+
+Design a hybrid system combining:
+
+#### a) Queue-Based Matching (Primary)
+
+* Maintain a distributed queue of waiting users
+* Match users in real-time using FIFO
+
+#### b) Interest-Based Matching (Priority Layer)
+
+* Each user has a set of interests (tags)
+* Match users with maximum similarity score
+
+Use:
+
+* Jaccard Similarity or Set Intersection
+
+Example:
+score = |A ∩ B| / |A ∪ B|
+
+#### c) Geo-Based Optimization
+
+* Prefer users from same region for low latency
+* Fallback to global matching if no local match found
+
+#### d) Priority Matching System
+
+* Users waiting longer get higher priority
+* Prevent starvation
+
+---
+
+## 🧠 Advanced Logic
+
+### 2. Match Scoring Function
+
+Create a scoring formula:
+
+MatchScore =
+(InterestWeight * InterestSimilarity) +
+(GeoWeight * GeoProximity) +
+(WaitTimeWeight * WaitTimeScore)
+
+Use weighted scoring to choose best match.
+
+---
+
+### 3. Anti-Repetition Algorithm
+
+* Prevent same users from reconnecting repeatedly
+* Maintain recent match history using:
+
+  * Hash maps or Redis sets
+
+---
+
+### 4. Dynamic Queue System
+
+* Use multiple queues:
+
+  * Global queue
+  * Region-based queues
+  * Interest-based clusters
+
+---
+
+### 5. Real-Time Skip Handling
+
+* On "Next":
+
+  * Immediately remove session
+  * Reinsert user into queue
+  * Avoid matching with last partner
+
+---
+
+## 🏗️ System Design
+
+### Backend:
+
+* Node.js + Socket.io
+* Redis for:
+
+  * Distributed queues
+  * Pub/Sub
+  * Match state
+* PostgreSQL for logs/reports
+
+### Data Structures:
+
+* Queue (FIFO)
+* HashMap (user metadata)
+* Set (interest matching)
+* Priority Queue (for wait-time boosting)
+
+---
+
+## 🔐 Safety Layer
+
+* Exclude banned/reported users
+* Rate limit matchmaking requests
+* Detect bots using heuristics
+
+---
+
+## ⚡ Performance Constraints
+
+* Match time < 2 seconds
+* Handle 10,000+ concurrent users
+* O(log n) or better matching complexity
+
+---
+
+## 📦 Code Requirements
+
+Provide:
+
+1. Matchmaking algorithm (Node.js)
+2. Redis-based queue implementation
+3. Scoring function implementation
+4. Socket.io integration
+5. Clean modular structure
+
+---
+
+## 🧪 Edge Cases
+
+Handle:
+
+* User disconnect during matching
+* Empty queues
+* Sudden traffic spikes
+* Multiple rapid "Next" clicks
+
+---
+
+## 🎯 Output Goal
+
+The system should:
+
+* Feel instant to users
+* Provide relevant matches when possible
+* Scale horizontally
+* Avoid repeated or poor matches
+
+---
+
+Explain each part of the algorithm clearly while writing production-level code.
