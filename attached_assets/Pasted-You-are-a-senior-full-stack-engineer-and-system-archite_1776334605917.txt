@@ -1,0 +1,209 @@
+You are a senior full-stack engineer and system architect.
+
+Build a production-ready, scalable, and secure Omegle-like random chat platform named "NexusRandom" using modern web technologies.
+
+## 🎯 Objective
+
+Create a real-time global chat platform where users can connect randomly via text and video, similar to Omegle, but with strong moderation, safety, and scalability.
+
+---
+
+## 🧱 Tech Stack Requirements
+
+### Frontend:
+
+* React.js (with hooks)
+* Tailwind CSS
+* WebRTC (for video/audio)
+* Socket.io-client
+
+### Backend:
+
+* Node.js with Express
+* Socket.io (real-time signaling)
+* Redis (for matchmaking queue and scaling)
+* PostgreSQL (for logs, reports, moderation data)
+
+### Deployment:
+
+* Use AWS / Vercel / Render
+* Use TURN/STUN servers for WebRTC
+
+---
+
+## ⚙️ Core Features
+
+### 1. Random Matchmaking System
+
+* Users click "Start Chat"
+* Place users into a queue
+* Match 2 users instantly
+* Create temporary session (room)
+* Handle disconnects and requeue
+
+### 2. Real-Time Text Chat
+
+* Instant messaging via WebSockets
+* Typing indicators
+* "Stranger is typing..." feature
+* No message persistence (ephemeral chats)
+
+### 3. Video Chat (WebRTC)
+
+* Peer-to-peer video/audio connection
+* Use STUN/TURN servers
+* Exchange SDP and ICE candidates via Socket.io
+* Handle fallback when connection fails
+
+### 4. Skip / Next Feature
+
+* Instantly disconnect current chat
+* Re-enter queue automatically
+
+### 5. Anonymous Identity
+
+* Assign random usernames (e.g., Stranger_1234)
+* Optional login system (Google/email)
+
+### 6. Moderation & Safety
+
+* Report user button
+* Block user functionality
+* AI-based NSFW detection (image/video moderation)
+* Rate limiting (anti-spam, anti-bot)
+* Maintain moderation logs
+
+### 7. Presence System
+
+* Online/offline tracking
+* Show active users count
+
+---
+
+## 🧠 System Design Requirements
+
+### Architecture:
+
+* Use scalable WebSocket architecture
+* Support multiple server instances
+* Use Redis Pub/Sub for synchronization
+* Load balancing support
+
+### Matchmaking Logic:
+
+* Maintain a queue (FIFO or priority-based)
+* Avoid matching same users repeatedly
+* Support filters:
+
+  * Country
+  * Interests (tags)
+  * Language
+
+---
+
+## 🔐 Security Requirements
+
+* Prevent abuse and harassment
+* Implement IP tracking (hashed)
+* Add CAPTCHA for bots
+* Enforce rate limits
+* Store reports securely
+* GDPR-compliant data handling
+
+---
+
+## 🗄️ Database Design (PostgreSQL)
+
+Tables:
+
+* users (optional)
+* reports
+* bans
+* logs
+
+Include schema with:
+
+* primary keys
+* timestamps
+* relationships
+
+---
+
+## 📡 WebRTC Flow
+
+1. User A joins
+2. User B joins
+3. Server matches them
+4. Exchange signaling data via Socket.io:
+
+   * SDP offer/answer
+   * ICE candidates
+5. Establish peer-to-peer connection
+
+---
+
+## 🚀 Scalability Considerations
+
+* Use Redis for distributed queue
+* Horizontal scaling for Socket servers
+* CDN for frontend delivery
+* TURN servers globally distributed
+
+---
+
+## 📁 Code Requirements
+
+Provide:
+
+* Clean folder structure
+* Modular backend (controllers, services, sockets)
+* Reusable React components
+* Environment configuration (.env)
+* Comments explaining logic
+
+---
+
+## 🧪 Testing
+
+* Simulate multiple users
+* Test WebRTC connections
+* Handle edge cases:
+
+  * sudden disconnect
+  * network failure
+  * queue overflow
+
+---
+
+## 📦 Deliverables
+
+1. Full backend code (Express + Socket.io + Redis)
+2. Frontend React app
+3. WebRTC implementation
+4. Database schema
+5. Deployment steps
+6. README with setup instructions
+
+---
+
+## ⚠️ Constraints
+
+* Do NOT store chat messages permanently
+* Focus on privacy-first design
+* Ensure fast matchmaking (<2 seconds)
+* Handle thousands of concurrent users
+
+---
+
+## 🎯 Goal
+
+The final system should:
+
+* Work globally
+* Be secure and moderated
+* Be scalable like real-world apps
+* Provide smooth real-time chat and video experience
+
+---
+
+Explain each step clearly while generating code. Prioritize clean architecture and production readiness.
