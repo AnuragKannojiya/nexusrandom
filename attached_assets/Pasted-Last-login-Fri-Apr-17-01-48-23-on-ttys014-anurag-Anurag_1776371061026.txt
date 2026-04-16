@@ -1,0 +1,207 @@
+Last login: Fri Apr 17 01:48:23 on ttys014
+anurag@Anurags-MacBook-Air ~ % ssh -i /Users/anurag/Downloads/nexusrandoM.pem ubuntu@3.213.242.152
+Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.17.0-1007-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Thu Apr 16 20:19:27 UTC 2026
+
+  System load:  0.0               Temperature:           -273.1 C
+  Usage of /:   45.4% of 6.71GB   Processes:             120
+  Memory usage: 26%               Users logged in:       1
+  Swap usage:   0%                IPv4 address for ens5: 172.31.66.15
+
+ * Ubuntu Pro delivers the most comprehensive open source security and
+   compliance features.
+
+   https://ubuntu.com/aws/pro
+
+Expanded Security Maintenance for Applications is not enabled.
+
+0 updates can be applied immediately.
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+*** System restart required ***
+Last login: Thu Apr 16 19:41:05 2026 from 203.192.242.194
+ubuntu@ip-172-31-66-15:~$ sudo nano /etc/nginx/sites-available/nexusrandom
+ubuntu@ip-172-31-66-15:~$ sudo nginx -t
+sudo systemctl restart nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+ubuntu@ip-172-31-66-15:~$ sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d nexus-random.online -d www.nexus-random.online
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  python3-acme python3-certbot python3-configargparse python3-icu python3-josepy python3-parsedatetime python3-rfc3339
+Suggested packages:
+  python-certbot-doc python3-certbot-apache python-acme-doc python-certbot-nginx-doc
+The following NEW packages will be installed:
+  certbot python3-acme python3-certbot python3-certbot-nginx python3-configargparse python3-icu python3-josepy
+  python3-parsedatetime python3-rfc3339
+0 upgraded, 9 newly installed, 0 to remove and 1 not upgraded.
+Need to get 1097 kB of archives.
+After this operation, 5699 kB of additional disk space will be used.
+Get:1 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-josepy all 1.14.0-1 [22.1 kB]
+Get:2 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-rfc3339 all 1.1-4 [6744 B]
+Get:3 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-acme all 2.9.0-1 [48.5 kB]
+Get:4 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-configargparse all 1.7-1 [31.7 kB]
+Get:5 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-parsedatetime all 2.6-3 [32.8 kB]
+Get:6 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-certbot all 2.9.0-1 [267 kB]
+Get:7 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 certbot all 2.9.0-1 [89.2 kB]
+Get:8 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/universe amd64 python3-certbot-nginx all 2.9.0-1 [66.0 kB]
+Get:9 http://us-east-1.ec2.archive.ubuntu.com/ubuntu noble/main amd64 python3-icu amd64 2.12-1build2 [534 kB]
+Fetched 1097 kB in 0s (17.7 MB/s)    
+Preconfiguring packages ...
+Selecting previously unselected package python3-josepy.
+(Reading database ... 110229 files and directories currently installed.)
+Preparing to unpack .../0-python3-josepy_1.14.0-1_all.deb ...
+Unpacking python3-josepy (1.14.0-1) ...
+Selecting previously unselected package python3-rfc3339.
+Preparing to unpack .../1-python3-rfc3339_1.1-4_all.deb ...
+Unpacking python3-rfc3339 (1.1-4) ...
+Selecting previously unselected package python3-acme.
+Preparing to unpack .../2-python3-acme_2.9.0-1_all.deb ...
+Unpacking python3-acme (2.9.0-1) ...
+Selecting previously unselected package python3-configargparse.
+Preparing to unpack .../3-python3-configargparse_1.7-1_all.deb ...
+Unpacking python3-configargparse (1.7-1) ...
+Selecting previously unselected package python3-parsedatetime.
+Preparing to unpack .../4-python3-parsedatetime_2.6-3_all.deb ...
+Unpacking python3-parsedatetime (2.6-3) ...
+Selecting previously unselected package python3-certbot.
+Preparing to unpack .../5-python3-certbot_2.9.0-1_all.deb ...
+Unpacking python3-certbot (2.9.0-1) ...
+Selecting previously unselected package certbot.
+Preparing to unpack .../6-certbot_2.9.0-1_all.deb ...
+Unpacking certbot (2.9.0-1) ...
+Selecting previously unselected package python3-certbot-nginx.
+Preparing to unpack .../7-python3-certbot-nginx_2.9.0-1_all.deb ...
+Unpacking python3-certbot-nginx (2.9.0-1) ...
+Selecting previously unselected package python3-icu.
+Preparing to unpack .../8-python3-icu_2.12-1build2_amd64.deb ...
+Unpacking python3-icu (2.12-1build2) ...
+Setting up python3-configargparse (1.7-1) ...
+Setting up python3-parsedatetime (2.6-3) ...
+Setting up python3-icu (2.12-1build2) ...
+Setting up python3-josepy (1.14.0-1) ...
+Setting up python3-rfc3339 (1.1-4) ...
+Setting up python3-acme (2.9.0-1) ...
+Setting up python3-certbot (2.9.0-1) ...
+Setting up certbot (2.9.0-1) ...
+Created symlink /etc/systemd/system/timers.target.wants/certbot.timer → /usr/lib/systemd/system/certbot.timer.
+Setting up python3-certbot-nginx (2.9.0-1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Scanning processes...                                                                                                   
+Scanning candidates...                                                                                                  
+Scanning linux images...                                                                                                
+
+Pending kernel upgrade!
+Running kernel version:
+  6.17.0-1007-aws
+Diagnostics:
+  The currently running kernel version is not the expected kernel version 6.17.0-1010-aws.
+
+Restarting the system to load the new kernel will not be handled automatically, so you should consider rebooting.
+
+Restarting services...
+
+Service restarts being deferred:
+ /etc/needrestart/restart.d/dbus.service
+ systemctl restart networkd-dispatcher.service
+ systemctl restart systemd-logind.service
+ systemctl restart unattended-upgrades.service
+
+No containers need to be restarted.
+
+User sessions running outdated binaries:
+ ubuntu @ user manager service: systemd[1094]
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Enter email address (used for urgent renewal and security notices)
+ (Enter 'c' to cancel):                                        
+Invalid email address: .
+
+
+If you really want to skip this, you can run the client with
+--register-unsafely-without-email but you will then be unable to receive notice
+about impending expiration or revocation of your certificates or problems with
+your Certbot installation that will lead to failure to renew.
+
+Enter email address (used for urgent renewal and security notices)
+ (Enter 'c' to cancel): anuragkannaujiyak@gmail.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Please read the Terms of Service at
+https://letsencrypt.org/documents/LE-SA-v1.6-August-18-2025.pdf. You must agree
+in order to register with the ACME server. Do you agree?
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(Y)es/(N)o: y
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Would you be willing, once your first certificate is successfully issued, to
+share your email address with the Electronic Frontier Foundation, a founding
+partner of the Let's Encrypt project and the non-profit organization that
+develops Certbot? We'd like to send you email about our work encrypting the web,
+EFF news, campaigns, and ways to support digital freedom.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(Y)es/(N)o: yes
+Account registered.
+Requesting a certificate for nexus-random.online and www.nexus-random.online
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/nexus-random.online/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/nexus-random.online/privkey.pem
+This certificate expires on 2026-07-15.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+Deploying certificate
+Successfully deployed certificate for nexus-random.online to /etc/nginx/sites-enabled/nexusrandom
+Successfully deployed certificate for www.nexus-random.online to /etc/nginx/sites-enabled/nexusrandom
+Congratulations! You have successfully enabled HTTPS on https://nexus-random.online and https://www.nexus-random.online
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ubuntu@ip-172-31-66-15:~$ nano ~/nexusrandom/ecosystem.config.cjs
+
+  GNU nano 7.2                          /home/ubuntu/nexusrandom/ecosystem.config.cjs                                   
+module.exports = {
+  apps: [{
+    name: 'nexusrandom-api',
+    script: './artifacts/api-server/dist/index.mjs',
+    cwd: '/home/ubuntu/nexusrandom',
+    interpreter: 'node',
+    interpreter_args: '--enable-source-maps',
+    env: {
+      NODE_ENV: 'production',
+      PORT: '8080',
+      DATABASE_URL: 'postgresql://nexus:Radha1431234@nexusrandom-db.cyp6kks8iwk4.us-east-1.rds.amazonaws.com:5432/postg>
+      ALLOWED_ORIGIN: 'https://nexus-random.netlify.app',
+      ADMIN_SECRET: 'B1@#@2HO2#NU',
+      SESSION_SECRET: '81ef6b19e0cc1495f2214d8797b407f97e4dd223fe08ec04000b91f9f9fe0702'
+    }
+  }]
+}
+
+
+
+
+
+
+
+
+
+                                                   [ Read 17 lines ]
+^G Help        ^O Write Out   ^W Where Is    ^K Cut         ^T Execute     ^C Location    M-U Undo       M-A Set Mark
+^X Exit        ^R Read File   ^\ Replace     ^U Paste       ^J Justify     ^/ Go To Line  M-E Redo       M-6 Copy
