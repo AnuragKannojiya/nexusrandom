@@ -12,6 +12,16 @@ function hashIp(ip: string): string {
   return createHash("sha256").update(ip + "nexusrandom_salt_2024").digest("hex");
 }
 
+function sanitizeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+}
+
 router.post("/reports", async (req, res): Promise<void> => {
   const body = CreateReportBody.safeParse(req.body);
   if (!body.success) {
@@ -22,13 +32,15 @@ router.post("/reports", async (req, res): Promise<void> => {
   const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
   const reporterIpHash = hashIp(ip);
 
+  const sanitizedDescription = body.data.description ? sanitizeHtml(body.data.description) : null;
+
   const [report] = await db
     .insert(reportsTable)
     .values({
       sessionId: body.data.sessionId,
       reporterIpHash,
       reason: body.data.reason,
-      description: body.data.description ?? null,
+      description: sanitizedDescription,
     })
     .returning();
 

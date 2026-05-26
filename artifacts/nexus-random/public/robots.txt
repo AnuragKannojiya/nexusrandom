@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /nexus-random/moderation
+Disallow: /moderation
+
+Sitemap: https://nexus-random.netlify.app/nexus-random/sitemap.xml

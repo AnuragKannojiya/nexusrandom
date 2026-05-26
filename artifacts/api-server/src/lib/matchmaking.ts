@@ -348,7 +348,7 @@ export function setupSocketIO(io: SocketIOServer): void {
       io.sockets.sockets.get(otherSocketId)?.emit("strangerTyping");
     });
 
-    socket.on("webrtcOffer", (data: { offer: RTCSessionDescriptionInit }) => {
+    socket.on("webrtcOffer", (data: { offer: any }) => {
       const sessionId = socketToSession.get(socket.id);
       if (!sessionId || !data?.offer) return;
       const session = activeSessions.get(sessionId);
@@ -359,7 +359,7 @@ export function setupSocketIO(io: SocketIOServer): void {
       io.sockets.sockets.get(otherSocketId)?.emit("webrtcOffer", { offer: data.offer });
     });
 
-    socket.on("webrtcAnswer", (data: { answer: RTCSessionDescriptionInit }) => {
+    socket.on("webrtcAnswer", (data: { answer: any }) => {
       const sessionId = socketToSession.get(socket.id);
       if (!sessionId || !data?.answer) return;
       const session = activeSessions.get(sessionId);
@@ -370,7 +370,7 @@ export function setupSocketIO(io: SocketIOServer): void {
       io.sockets.sockets.get(otherSocketId)?.emit("webrtcAnswer", { answer: data.answer });
     });
 
-    socket.on("webrtcIceCandidate", (data: { candidate: RTCIceCandidateInit }) => {
+    socket.on("webrtcIceCandidate", (data: { candidate: any }) => {
       const sessionId = socketToSession.get(socket.id);
       if (!sessionId || !data?.candidate) return;
       const session = activeSessions.get(sessionId);

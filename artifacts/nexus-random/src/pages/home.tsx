@@ -317,22 +317,22 @@ export default function Home() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/20 blur-[120px] rounded-full mix-blend-screen" />
       </div>
 
-      <header className="relative z-10 border-b border-border/50 bg-black/40 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+      <header className="relative z-10 border-b border-border/50 bg-black/40 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center">
             <Video className="w-4 h-4 text-primary" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">
             NEXUS<span className="text-primary">RANDOM</span>
           </h1>
         </div>
-        <div className="flex items-center gap-2 bg-primary/10 border border-primary/30 px-3 py-1.5 rounded-full">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,255,255,1)]" />
-          <span className="text-sm font-medium text-primary">{onlineCount.toLocaleString()} online</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 border border-primary/30 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full">
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,255,255,1)]" />
+          <span className="text-xs sm:text-sm font-medium text-primary">{onlineCount.toLocaleString()} online</span>
         </div>
       </header>
 
-      <main className="flex-1 relative z-10 flex items-center justify-center p-4 lg:p-8">
+      <main className="flex-1 relative z-10 flex items-center justify-center p-3 sm:p-4 lg:p-8">
         <AnimatePresence mode="wait">
 
           {chatState === "landing" && (
@@ -341,55 +341,59 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl text-center space-y-8"
+              className="w-full max-w-2xl text-center space-y-6 sm:space-y-8"
             >
-              <div className="space-y-4">
-                <h2 className="text-5xl lg:text-7xl font-bold tracking-tighter text-white">
+              <div className="space-y-3 sm:space-y-4">
+                <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter text-white">
                   Connect{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
                     Instantly.
                   </span>
                 </h2>
-                <p className="text-lg lg:text-xl text-muted-foreground max-w-lg mx-auto">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-lg mx-auto">
                   A raw, electric global chat platform. Drop into a live video chat with anyone in the world.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-3xl mx-auto">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-sm">
-                  <Video className="w-6 h-6 text-primary mb-3" />
-                  <h3 className="font-semibold text-white mb-1">Live Video</h3>
-                  <p className="text-sm text-muted-foreground">High quality WebRTC video and audio.</p>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-sm">
-                  <Users className="w-6 h-6 text-accent mb-3" />
-                  <h3 className="font-semibold text-white mb-1">Anonymous</h3>
-                  <p className="text-sm text-muted-foreground">No accounts, no history, complete privacy.</p>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-sm">
-                  <MessageSquare className="w-6 h-6 text-primary mb-3" />
-                  <h3 className="font-semibold text-white mb-1">Fast Matches</h3>
-                  <p className="text-sm text-muted-foreground">Connect with someone new in milliseconds.</p>
-                </div>
-              </div>
+              <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 text-left max-w-3xl mx-auto" aria-label="Key features of NexusRandom">
+                <article className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-5 backdrop-blur-sm">
+                  <Video className="w-5 h-5 sm:w-6 sm:h-6 text-primary mb-2 sm:mb-3" aria-hidden="true" />
+                  <h3 className="font-semibold text-white text-sm sm:text-base mb-0.5 sm:mb-1">Live Video</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">High quality WebRTC video and audio.</p>
+                </article>
+                <article className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-5 backdrop-blur-sm">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-accent mb-2 sm:mb-3" aria-hidden="true" />
+                  <h3 className="font-semibold text-white text-sm sm:text-base mb-0.5 sm:mb-1">Anonymous</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">No accounts, no history, complete privacy.</p>
+                </article>
+                <article className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-5 backdrop-blur-sm">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary mb-2 sm:mb-3" aria-hidden="true" />
+                  <h3 className="font-semibold text-white text-sm sm:text-base mb-0.5 sm:mb-1">Fast Matches</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Connect with someone new in milliseconds.</p>
+                </article>
+              </section>
 
-              <div className="w-full max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-5 text-left space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-white">
-                  <Tag className="w-4 h-4 text-primary" />
+              <section className="w-full max-w-xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 text-left space-y-3" aria-label="Interest-based matchmaking keywords">
+                <label htmlFor="interest-input" className="flex items-center gap-2 text-xs sm:text-sm font-medium text-white cursor-pointer">
+                  <Tag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" aria-hidden="true" />
                   <span>Interest Keywords</span>
-                  <span className="text-muted-foreground font-normal">(optional)</span>
-                </div>
+                  <span className="text-muted-foreground font-normal text-xs ml-1">(optional)</span>
+                </label>
 
                 {interests.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2" aria-label="Selected interests">
                     {interests.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1.5 bg-primary/20 border border-primary/40 text-primary text-sm px-3 py-1 rounded-full font-medium"
+                        className="inline-flex items-center gap-1.5 bg-primary/20 border border-primary/40 text-primary text-xs sm:text-sm px-2.5 py-0.5 sm:py-1 rounded-full font-medium"
                       >
                         #{tag}
-                        <button onClick={() => removeTag(tag)} className="hover:text-white transition-colors">
-                          <X className="w-3 h-3" />
+                        <button
+                          onClick={() => removeTag(tag)}
+                          className="hover:text-white transition-colors focus:outline-none focus:ring-1 focus:ring-primary rounded-full p-0.5"
+                          aria-label={`Remove interest tag ${tag}`}
+                        >
+                          <X className="w-3 h-3" aria-hidden="true" />
                         </button>
                       </span>
                     ))}
@@ -398,45 +402,48 @@ export default function Home() {
 
                 <div className="flex gap-2">
                   <input
+                    id="interest-input"
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
-                    placeholder="Type a keyword and press Enter..."
+                    placeholder="Type keyword and press Enter..."
                     maxLength={20}
-                    className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                    className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-muted-foreground text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                   />
                   <button
                     onClick={() => { addTag(tagInput); setTagInput(""); }}
-                    className="px-4 py-2.5 bg-primary/20 border border-primary/40 text-primary rounded-xl text-sm font-medium hover:bg-primary/30 transition-colors"
+                    className="px-3 py-2 sm:px-4 sm:py-2.5 bg-primary/20 border border-primary/40 text-primary rounded-xl text-xs sm:text-sm font-medium hover:bg-primary/30 transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                    aria-label="Add interest keyword"
                   >
                     Add
                   </button>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2" aria-label="Popular tags suggestions">
                   {POPULAR_TAGS.filter((t) => !interests.includes(t)).slice(0, 6).map((tag) => (
                     <button
                       key={tag}
                       onClick={() => addTag(tag)}
-                      className="text-xs text-muted-foreground border border-white/10 px-2.5 py-1 rounded-full hover:border-primary/50 hover:text-primary transition-all"
+                      className="text-[10px] sm:text-xs text-muted-foreground border border-white/10 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full hover:border-primary/50 hover:text-primary transition-all focus:outline-none focus:ring-1 focus:ring-primary"
+                      aria-label={`Add popular tag ${tag}`}
                     >
                       +{tag}
                     </button>
                   ))}
                 </div>
-              </div>
+              </section>
 
               <div className="pt-2">
                 <Button
                   size="lg"
                   onClick={handleStartChat}
-                  className="h-16 px-12 text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-full shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all"
+                  className="h-14 sm:h-16 px-8 sm:px-12 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-black rounded-full shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:shadow-[0_0_50px_rgba(0,255,255,0.6)] transition-all"
                 >
                   START CHAT
                 </Button>
                 {interests.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-3">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-3">
                     Matching with people interested in: {interests.map((t) => `#${t}`).join(", ")}
                   </p>
                 )}
@@ -452,22 +459,22 @@ export default function Home() {
               exit={{ opacity: 0, scale: 1.05 }}
               className="flex flex-col items-center justify-center space-y-6"
             >
-              <div className="relative w-32 h-32 flex items-center justify-center">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin" style={{ animationDuration: "1s" }} />
                 <div className="absolute inset-2 rounded-full border-r-2 border-accent animate-spin" style={{ animationDuration: "1.5s", animationDirection: "reverse" }} />
                 <div className="absolute inset-4 rounded-full border-b-2 border-primary animate-spin" style={{ animationDuration: "2s" }} />
-                <Video className="w-8 h-8 text-primary animate-pulse" />
+                <Video className="w-6 h-6 sm:w-8 sm:h-8 text-primary animate-pulse" />
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-bold text-white tracking-tight">Finding a Stranger</h3>
-                <p className="text-primary animate-pulse font-mono">Scanning global network...</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Finding a Stranger</h3>
+                <p className="text-primary animate-pulse font-mono text-sm sm:text-base">Scanning global network...</p>
                 {interests.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     Looking for: {interests.map((t) => `#${t}`).join(" ")}
                   </p>
                 )}
               </div>
-              <Button variant="outline" onClick={doStop} className="mt-8 border-white/20 hover:bg-white/10 text-white rounded-full px-8">
+              <Button variant="outline" onClick={doStop} className="mt-6 sm:mt-8 border-white/20 hover:bg-white/10 text-white rounded-full px-6 sm:px-8 text-xs sm:text-sm h-9 sm:h-10">
                 CANCEL
               </Button>
             </motion.div>
@@ -478,80 +485,78 @@ export default function Home() {
               key="chatting"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full max-w-6xl h-[calc(100vh-120px)] grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6"
+              className="w-full max-w-6xl h-[calc(100dvh-95px)] sm:h-[calc(100dvh-110px)] lg:h-[calc(100dvh-130px)] flex flex-col lg:grid lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-6"
             >
-              <div className="lg:col-span-8 flex flex-col gap-4">
-                <div className="flex-1 relative min-h-[300px]">
+              <div className="h-[42dvh] sm:h-[48dvh] lg:h-auto lg:col-span-8 flex flex-col gap-3 sm:gap-4">
+                <div className="flex-1 relative overflow-hidden bg-black/80 border border-border/50 rounded-2xl shadow-lg">
                   {/* Stranger video — full size main screen */}
-                  <div className="w-full h-full relative bg-black/80 border border-border/50 rounded-2xl overflow-hidden shadow-lg">
-                    <video
-                      ref={setRemoteVideoRef}
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
-                    {!hasRemoteStream && !disconnected && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
-                        <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
-                        <span className="text-muted-foreground font-medium">{strangerName}</span>
-                        <span className="text-xs text-muted-foreground/70 mt-1">Connecting video...</span>
-                      </div>
-                    )}
-                    {disconnected && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95">
-                        <VideoOff className="w-10 h-10 text-muted-foreground mb-3" />
-                        <span className="text-white font-semibold">Stranger left</span>
-                        <span className="text-primary text-sm mt-2 font-mono">
-                          Finding next in {autoNextCountdown}s...
-                        </span>
-                        <div className="flex gap-2 mt-4">
-                          <button
-                            onClick={doSkip}
-                            className="px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg hover:bg-primary/90"
-                          >
-                            Find Now
-                          </button>
-                          <button
-                            onClick={() => { cancelAutoNext(); doStop(); }}
-                            className="px-4 py-2 bg-white/10 text-white text-sm rounded-lg hover:bg-white/20"
-                          >
-                            Stop
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {!disconnected && (
-                      <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-xs font-medium text-white flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${hasRemoteStream ? "bg-green-400 animate-pulse" : "bg-yellow-400"}`} />
-                        {strangerName}
-                      </div>
-                    )}
-
-                    {/* Camera & mic controls — bottom centre of main screen */}
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                      <button
-                        onClick={toggleVideo}
-                        title={videoEnabled ? "Disable camera" : "Enable camera"}
-                        className="w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
-                      >
-                        {videoEnabled
-                          ? <Video className="w-4 h-4 text-white" />
-                          : <VideoOff className="w-4 h-4 text-destructive" />}
-                      </button>
-                      <button
-                        onClick={toggleAudio}
-                        title={audioEnabled ? "Mute mic" : "Unmute mic"}
-                        className="w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
-                      >
-                        {audioEnabled
-                          ? <Mic className="w-4 h-4 text-white" />
-                          : <MicOff className="w-4 h-4 text-destructive" />}
-                      </button>
+                  <video
+                    ref={setRemoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {!hasRemoteStream && !disconnected && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 p-4 text-center">
+                      <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-primary animate-spin mb-3" />
+                      <span className="text-muted-foreground font-medium text-sm sm:text-base">{strangerName}</span>
+                      <span className="text-[10px] sm:text-xs text-muted-foreground/70 mt-1">Connecting video...</span>
                     </div>
+                  )}
+                  {disconnected && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/95 p-4 text-center">
+                      <VideoOff className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground mb-2 sm:mb-3" />
+                      <span className="text-white font-semibold text-sm sm:text-base">Stranger left</span>
+                      <span className="text-primary text-xs sm:text-sm mt-1 sm:mt-2 font-mono">
+                        Finding next in {autoNextCountdown}s...
+                      </span>
+                      <div className="flex gap-2 mt-3 sm:mt-4">
+                        <button
+                          onClick={doSkip}
+                          className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-primary text-black text-xs sm:text-sm font-bold rounded-lg hover:bg-primary/90"
+                        >
+                          Find Now
+                        </button>
+                        <button
+                          onClick={() => { cancelAutoNext(); doStop(); }}
+                          className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-white/10 text-white text-xs sm:text-sm rounded-lg hover:bg-white/20"
+                        >
+                          Stop
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {!disconnected && (
+                    <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3 bg-black/60 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-white/10 text-[10px] sm:text-xs font-medium text-white flex items-center gap-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${hasRemoteStream ? "bg-green-400 animate-pulse" : "bg-yellow-400"}`} />
+                      {strangerName}
+                    </div>
+                  )}
+
+                  {/* Camera & mic controls — bottom centre of main screen */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 sm:bottom-4 sm:gap-2">
+                    <button
+                      onClick={toggleVideo}
+                      title={videoEnabled ? "Disable camera" : "Enable camera"}
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
+                    >
+                      {videoEnabled
+                        ? <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                        : <VideoOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />}
+                    </button>
+                    <button
+                      onClick={toggleAudio}
+                      title={audioEnabled ? "Mute mic" : "Unmute mic"}
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center hover:bg-black transition-colors"
+                    >
+                      {audioEnabled
+                        ? <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                        : <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-destructive" />}
+                    </button>
                   </div>
 
                   {/* Your video — floating PiP in bottom-right corner */}
-                  <div className="absolute bottom-4 right-4 w-32 h-24 sm:w-44 sm:h-32 rounded-xl overflow-hidden border-2 border-primary/40 shadow-2xl z-10 bg-black/80">
+                  <div className="absolute bottom-3 right-3 w-24 h-18 sm:bottom-4 sm:right-4 sm:w-44 sm:h-32 rounded-xl overflow-hidden border-2 border-primary/40 shadow-2xl z-10 bg-black/80">
                     <video
                       ref={setLocalVideoRef}
                       autoPlay
@@ -561,39 +566,37 @@ export default function Home() {
                     />
                     {!hasLocalStream && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
-                        <VideoOff className="w-5 h-5 text-muted-foreground mb-1" />
-                        <span className="text-muted-foreground text-xs">You</span>
+                        <VideoOff className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground mb-1" />
+                        <span className="text-muted-foreground text-[9px] sm:text-xs">You</span>
                       </div>
                     )}
                     {hasLocalStream && !videoEnabled && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                        <VideoOff className="w-5 h-5 text-muted-foreground" />
+                        <VideoOff className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                       </div>
                     )}
-                    <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[10px] font-medium text-white flex items-center gap-1">
+                    <div className="absolute bottom-1 left-1 sm:bottom-1.5 sm:left-1.5 bg-black/60 backdrop-blur-md px-1 sm:px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-medium text-white flex items-center gap-1">
                       <div className="w-1 h-1 rounded-full bg-primary" />
                       You
                     </div>
                   </div>
                 </div>
 
-                <div className="h-20 bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-between px-6">
-                  <div className="flex gap-3">
+                <div className="h-14 sm:h-16 lg:h-20 bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-between px-4 sm:px-6 flex-shrink-0">
+                  <div className="flex gap-2 sm:gap-3">
                     <Button
                       variant="destructive"
-                      size="lg"
                       onClick={doStop}
-                      className="font-bold rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+                      className="h-9 sm:h-11 lg:h-12 px-3 sm:px-5 lg:px-6 text-[11px] sm:text-sm lg:text-base font-bold rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                     >
-                      <StopCircle className="mr-2 w-5 h-5" />
+                      <StopCircle className="mr-1.5 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                       STOP
                     </Button>
                     <Button
-                      size="lg"
                       onClick={doSkip}
-                      className="bg-white hover:bg-gray-200 text-black font-bold rounded-xl"
+                      className="h-9 sm:h-11 lg:h-12 px-3 sm:px-5 lg:px-6 text-[11px] sm:text-sm lg:text-base bg-white hover:bg-gray-200 text-black font-bold rounded-xl"
                     >
-                      <SkipForward className="mr-2 w-5 h-5" />
+                      <SkipForward className="mr-1.5 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                       NEXT
                     </Button>
                   </div>
@@ -601,23 +604,23 @@ export default function Home() {
                     <Button
                       variant="ghost"
                       onClick={() => setIsReportOpen(true)}
-                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      className="h-8 sm:h-10 text-[10px] sm:text-xs lg:text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 px-2 sm:px-3"
                     >
-                      <AlertTriangle className="mr-2 w-4 h-4" />
+                      <AlertTriangle className="mr-1.5 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       Report
                     </Button>
                   )}
                 </div>
               </div>
 
-              <div className="lg:col-span-4 flex flex-col bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden h-full">
-                <div className="p-4 border-b border-white/10 bg-black/20 font-medium text-white flex justify-between items-center">
+              <div className="flex-1 lg:col-span-4 flex flex-col bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden min-h-0">
+                <div className="p-3 sm:p-4 border-b border-white/10 bg-black/20 font-medium text-white flex justify-between items-center flex-shrink-0 text-sm sm:text-base">
                   <span>Chat</span>
                   <span className="text-xs text-muted-foreground font-mono">{strangerName}</span>
                 </div>
 
-                <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-                  <div className="text-center py-3 text-xs font-mono text-primary bg-primary/5 rounded-lg border border-primary/20">
+                <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
+                  <div className="text-center py-2.5 px-3 text-[11px] sm:text-xs font-mono text-primary bg-primary/5 rounded-lg border border-primary/20">
                     Connected to {strangerName}!
                     {interests.length > 0 && (
                       <span className="block mt-1 text-muted-foreground">
@@ -628,11 +631,11 @@ export default function Home() {
 
                   {messages.map((msg) => (
                     <div key={msg.id} className={`flex flex-col ${msg.from === "you" ? "items-end" : "items-start"}`}>
-                      <span className="text-[10px] text-muted-foreground mb-1 px-1 uppercase tracking-wider font-semibold">
+                      <span className="text-[9px] sm:text-[10px] text-muted-foreground mb-0.5 sm:mb-1 px-1 uppercase tracking-wider font-semibold">
                         {msg.from === "you" ? "You" : strangerName}
                       </span>
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
+                        className={`max-w-[85%] rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm ${
                           msg.from === "you"
                             ? "bg-primary text-black rounded-tr-sm shadow-[0_0_15px_rgba(0,255,255,0.2)]"
                             : "bg-white/10 text-white border border-white/5 rounded-tl-sm"
@@ -645,24 +648,24 @@ export default function Home() {
 
                   {strangerTyping && !disconnected && (
                     <div className="flex items-start">
-                      <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.2s" }} />
-                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.4s" }} />
+                      <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5 sm:px-4 sm:py-3 flex items-center gap-1.5">
+                        <span className="w-1.2 h-1.2 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground animate-bounce" />
+                        <span className="w-1.2 h-1.2 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.2s" }} />
+                        <span className="w-1.2 h-1.2 sm:w-1.5 sm:h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0.4s" }} />
                       </div>
                     </div>
                   )}
 
                   {disconnected && (
-                    <div className="text-center py-4 space-y-3">
-                      <div className="inline-block px-4 py-2 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm font-medium">
+                    <div className="text-center py-3 sm:py-4 space-y-2.5 sm:space-y-3">
+                      <div className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-xs sm:text-sm font-medium">
                         Stranger has disconnected
                       </div>
                       <div className="flex gap-2 justify-center">
-                        <Button size="sm" onClick={doSkip} className="bg-primary hover:bg-primary/90 text-black font-bold">
+                        <Button size="sm" onClick={doSkip} className="h-8 sm:h-9 bg-primary hover:bg-primary/90 text-black font-bold text-xs">
                           Find Next ({autoNextCountdown}s)
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => { cancelAutoNext(); doStop(); }} className="border-white/20 text-white hover:bg-white/10">
+                        <Button size="sm" variant="outline" onClick={() => { cancelAutoNext(); doStop(); }} className="h-8 sm:h-9 border-white/20 text-white hover:bg-white/10 text-xs">
                           Stop
                         </Button>
                       </div>
@@ -670,7 +673,7 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="p-4 bg-black/40 border-t border-white/10">
+                <div className="p-3 sm:p-4 bg-black/40 border-t border-white/10 flex-shrink-0">
                   <form onSubmit={handleSendMessage} className="flex gap-2">
                     <input
                       type="text"
@@ -678,12 +681,12 @@ export default function Home() {
                       onChange={handleTyping}
                       placeholder={disconnected ? "Chat ended..." : "Type a message..."}
                       disabled={disconnected}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-50 text-sm"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all disabled:opacity-50 text-xs sm:text-sm h-10 sm:h-12"
                     />
                     <Button
                       type="submit"
                       disabled={!inputValue.trim() || disconnected}
-                      className="rounded-xl px-5 bg-primary hover:bg-primary/90 text-black font-bold disabled:opacity-50 shadow-[0_0_15px_rgba(0,255,255,0.3)]"
+                      className="rounded-xl h-10 sm:h-12 px-4 sm:px-5 bg-primary hover:bg-primary/90 text-black font-bold disabled:opacity-50 shadow-[0_0_15px_rgba(0,255,255,0.3)] text-xs sm:text-sm"
                     >
                       SEND
                     </Button>
