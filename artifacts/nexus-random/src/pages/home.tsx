@@ -60,16 +60,31 @@ export default function Home() {
     interestsRef.current = interests;
   }, [interests]);
 
+  // Keep local video element in sync with the WebRTC manager local stream
+  useEffect(() => {
+    if (chatState === "chatting" && localVideoRef.current) {
+      const stream = webrtcRef.current.getLocalStream();
+      if (stream && localVideoRef.current.srcObject !== stream) {
+        localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true;
+        localVideoRef.current.defaultMuted = true;
+        localVideoRef.current.play().catch((err) => console.warn("Local video play failed:", err));
+      }
+    }
+  }, [chatState, hasLocalStream]);
+
   const setLocalVideoRef = useCallback((el: HTMLVideoElement | null) => {
     localVideoRef.current = el;
     if (el) {
+      el.muted = true; // Ensure programmatically muted for browser autoplay compliance
+      el.defaultMuted = true;
       const stream = webrtcRef.current.getLocalStream();
       if (stream) {
         el.srcObject = stream;
-        el.play().catch(() => {});
+        el.play().catch((err) => console.warn("Local video play failed:", err));
       }
     }
-  }, []);
+  }, [chatState]);
 
   const setRemoteVideoRef = useCallback((el: HTMLVideoElement | null) => {
     remoteVideoRef.current = el;
@@ -86,7 +101,9 @@ export default function Home() {
     setHasLocalStream(!!stream);
     if (localVideoRef.current && stream) {
       localVideoRef.current.srcObject = stream;
-      localVideoRef.current.play().catch(() => {});
+      localVideoRef.current.muted = true;
+      localVideoRef.current.defaultMuted = true;
+      localVideoRef.current.play().catch((err) => console.warn("Local video play failed:", err));
     }
   }, []);
 
@@ -556,13 +573,13 @@ export default function Home() {
                   </div>
 
                   {/* Your video — floating PiP in bottom-right corner */}
-                  <div className="absolute bottom-3 right-3 w-24 h-18 sm:bottom-4 sm:right-4 sm:w-44 sm:h-32 rounded-xl overflow-hidden border-2 border-primary/40 shadow-2xl z-10 bg-black/80">
+                  <div className="absolute bottom-3 right-3 w-24 h-20 sm:bottom-4 sm:right-4 sm:w-44 sm:h-32 rounded-xl overflow-hidden border-2 border-primary/40 shadow-2xl z-10 bg-black/80">
                     <video
                       ref={setLocalVideoRef}
                       autoPlay
                       playsInline
-                      muted
-                      className="w-full h-full object-cover scale-x-[-1]"
+                      muted={true}
+                      className="w-full h-full object-cover transform -scale-x-100"
                     />
                     {!hasLocalStream && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
